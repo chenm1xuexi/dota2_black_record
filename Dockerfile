@@ -1,6 +1,9 @@
 # Multi-stage build for Dota 2 Battle Management System
 # Stage 1: Build frontend and backend
-FROM node:20-alpine AS builder
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS builder
+
+RUN echo "registry=https://registry.npmmirror.com" > ~/.npmrc
+
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -23,7 +26,9 @@ COPY . .
 RUN pnpm build
 
 # Stage 3: Production runtime
-FROM node:20-alpine AS production
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS production
+
+RUN echo "registry=https://registry.npmmirror.com" > ~/.npmrc
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
