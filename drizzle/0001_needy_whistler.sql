@@ -1,0 +1,1 @@
+ALTER TABLE `heroes` ADD `icon` varchar(255);
