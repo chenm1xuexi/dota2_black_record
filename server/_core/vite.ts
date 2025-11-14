@@ -5,6 +5,12 @@ import { nanoid } from "nanoid";
 import path from "path";
 
 export async function setupVite(app: Express, server: Server) {
+  // This function should only be called in development mode
+  // Additional check to prevent any production execution
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("setupVite should not be called in production mode");
+  }
+
   // Dynamic import to avoid bundling vite in production builds
   // This ensures vite is only loaded in development mode
   const { createServer: createViteServer } = await import("vite");

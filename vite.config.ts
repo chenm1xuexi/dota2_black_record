@@ -1,10 +1,18 @@
-import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "path";
 import { defineConfig } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 export default defineConfig(async ({ mode }) => {
+  // Conditionally import React plugin to avoid bundling in production
+  let reactPlugin: any = null;
+  try {
+    const react = await import("@vitejs/plugin-react");
+    reactPlugin = react.default;
+  } catch (err) {
+    console.warn("@vitejs/plugin-react not available, skipping React plugin");
+  }
+
   // Conditionally import TailwindCSS plugin to avoid bundling in production
   // Only load in development mode or when explicitly building for client
   let tailwindcssPlugin = null;
@@ -19,7 +27,7 @@ export default defineConfig(async ({ mode }) => {
     : null;
 
   const plugins = [
-    react(),
+    reactPlugin,
     ...(tailwindcssPlugin ? [tailwindcssPlugin] : []),
     vitePluginManusRuntime(),
     ...(jsxLocPlugin ? [jsxLocPlugin] : []),
