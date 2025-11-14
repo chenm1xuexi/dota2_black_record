@@ -1,5 +1,8 @@
 # 如果你想进一步减小镜像体积和提高安全性
-FROM node:20-alpine AS builder
+# FROM node:20-alpine AS builder
+# 国内可使用
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS builder
+
 
 # 使用 .npmrc 文件配置（更优雅）
 RUN echo "registry=https://registry.npmmirror.com" > ~/.npmrc
@@ -19,7 +22,8 @@ COPY . .
 RUN pnpm build
 
 # Production stage
-FROM node:20-alpine AS production
+# FROM node:20-alpine AS production
+FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS production
 
 RUN echo "registry=https://registry.npmmirror.com" > ~/.npmrc
 RUN corepack enable && corepack prepare pnpm@latest --activate
