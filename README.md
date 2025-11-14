@@ -94,7 +94,8 @@ dota2_black_record/
 │   ├── schema.ts           # 数据库 Schema
 │   └── migrations/         # 数据库迁移文件
 ├── scripts/                # 脚本文件
-├── docker-compose.yml      # Docker Compose 配置
+├── docker-compose.yml      # Docker Compose 配置（本地构建）
+├── docker-compose-cloud.yaml  # Docker Compose 配置（使用预构建镜像）
 ├── Dockerfile              # Docker 镜像配置
 └── package.json            # 项目依赖
 ```
@@ -184,10 +185,57 @@ pnpm start
 
 ## 🐳 Docker 部署
 
-使用 Docker Compose 可以快速部署整个系统：
+### 方式一：使用预构建镜像（推荐，快速部署）
+
+如果你不想自己构建镜像，可以直接使用已经构建好的云端镜像：
+
+1. **准备环境变量文件**
+
+创建 `.env` 文件并配置以下环境变量：
+
+```env
+# 应用端口
+APP_PORT=3000
+
+# 环境
+NODE_ENV=production
+
+# 数据库连接（请填写你的云数据库连接信息）
+# 格式: mysql://username:password@host:port/database
+# 注意：如果密码包含特殊字符，需要进行 URL 编码
+DATABASE_URL=mysql://username:password@your-db-host:3306/dota2
+
+# JWT 密钥（生产环境请使用强密钥）
+JWT_SECRET=your-strong-secret-key
+
+# 应用 ID
+VITE_APP_ID=xiaofeifei-dota2-battle-system
+```
+
+2. **启动服务**
 
 ```bash
-# 构建并启动所有服务
+# 使用云端镜像启动
+docker compose -f docker-compose-cloud.yaml up -d
+
+# 查看日志
+docker compose -f docker-compose-cloud.yaml logs -f
+
+# 停止服务
+docker compose -f docker-compose-cloud.yaml down
+```
+
+**注意**：
+- 使用此方式需要确保你的云数据库已经初始化（运行过 `scripts/init.sql`）
+- 镜像地址已预配置，无需修改
+- 只需配置 `DATABASE_URL` 环境变量即可
+
+### 方式二：本地构建镜像
+
+如果你想自己构建镜像，可以使用本地 Docker Compose 配置：
+
+```bash
+# 构建并启动所有服务（包含 MySQL 容器）
 docker compose up -d
 
 # 查看日志
@@ -196,6 +244,12 @@ docker compose logs -f
 # 停止服务
 docker compose down
 ```
+
+**使用外部 MySQL**：
+如果你已经有 MySQL 数据库（如云数据库），可以：
+1. 注释掉 `docker-compose.yml` 中的 `db` 服务
+2. 注释掉 `app` 服务中的 `depends_on` 部分
+3. 设置 `DATABASE_URL` 环境变量指向你的数据库
 
 详细的部署说明请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)
 

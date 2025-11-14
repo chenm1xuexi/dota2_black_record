@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Application - Cloud Deployment
+  app:
+    image: crpi-i8di4kksl3oe9ugm.cn-hangzhou.personal.cr.aliyuncs.com/feifei-ai/feifei:feifei-dota2-v0.1
+    container_name: feifei-dota2
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      # Database connection URL - Please fill in your cloud database connection string
+      # Format: mysql://username:password@host:port/database
+      # Example: mysql://user:pass@your-db-host.com:3306/dota2
+      # Note: If password contains special characters, URL encode them:
+      #       @ -> %40, # -> %23, % -> %25, & -> %26, + -> %2B, = -> %3D
+      DATABASE_URL: ${DATABASE_URL}
+      # JWT Secret - Please set a strong secret key for production
+      JWT_SECRET: ${JWT_SECRET:-xiaofeifei}
+      # Application ID
+      VITE_APP_ID: ${VITE_APP_ID:-xiaofeifei-dota2-battle-system}
+    networks:
+      - dota2-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/api/trpc/system.health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  dota2-network:
+    driver: bridge
+
