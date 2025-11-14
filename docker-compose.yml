@@ -2,25 +2,19 @@ version: '3.8'
 
 services:
   # MySQL Database
-  # Note: If using external MySQL (e.g., Alibaba Cloud DMS, AWS RDS, etc.),
-  #       you can comment out this entire 'db' service section and set DATABASE_URL
-  #       environment variable in the 'app' service to point to your external MySQL.
   db:
     image: mysql:8.0
     container_name: dota2-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword123}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-dota2}
-      MYSQL_USER: ${MYSQL_USER:-dota2user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dota2password123}
+      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_DATABASE: dota2
+      MYSQL_USER: dota2user
+      MYSQL_PASSWORD: dota2password123
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "23330:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # init.sql will be automatically executed on first container startup
-      # Note: init.sql assumes database already exists (created by MYSQL_DATABASE env var)
-      # For external MySQL setup, see scripts/README.md
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - dota2-network
@@ -39,19 +33,13 @@ services:
     container_name: dota2-app
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "3000:3000"
     environment:
-      NODE_ENV: ${NODE_ENV:-production}
+      NODE_ENV: production
       PORT: 3000
-      # Database connection URL
-      # - When using MySQL container: use 'db' as hostname (default)
-      # - When using external MySQL: set DATABASE_URL to point to external service
-      #   Example: mysql://user:password@host:port/database
-      #   For external MySQL setup, first run: scripts/init-database.sql, then scripts/init.sql
-      DATABASE_URL: ${DATABASE_URL:-mysql://dota2user:dota2password123@db:3306/dota2}
-      JWT_SECRET: ${JWT_SECRET:-xiaofeifei}
-      VITE_APP_ID: ${VITE_APP_ID:-xiaofeifei-dota2-battle-system}
-    # If you comment out the 'db' service above, also comment out the 'depends_on' section below
+      DATABASE_URL: mysql://dota2user:dota2password123@db:3306/dota2
+      JWT_SECRET: xiaofeifei
+      VITE_APP_ID: xiaofeifei-dota2-battle-system
     depends_on:
       db:
         condition: service_healthy

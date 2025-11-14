@@ -1,15 +1,9 @@
 # Multi-stage build for Dota 2 Battle Management System
 # Stage 1: Build frontend and backend
-# FROM node:20-alpine AS builder
-FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS builder
-# 配置 npm 镜像为阿里云
-RUN npm config set registry https://registry.npmmirror.com
+FROM node:20-alpine AS builder
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# 配置 pnpm 使用阿里云镜像
-RUN pnpm config set registry https://registry.npmmirror.com
 
 # Set working directory
 WORKDIR /app
@@ -28,18 +22,11 @@ COPY . .
 # This runs both frontend (Vite) and backend (esbuild) builds
 RUN pnpm build
 
-# Stage 2: Production runtime
-# FROM node:20-alpine AS production
-FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS production
-
-# 配置 npm 镜像为阿里云
-RUN npm config set registry https://registry.npmmirror.com
+# Stage 3: Production runtime
+FROM node:20-alpine AS production
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# 配置 pnpm 使用阿里云镜像
-RUN pnpm config set registry https://registry.npmmirror.com
 
 # Set working directory
 WORKDIR /app
@@ -48,8 +35,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 # Copy build artifacts from builder stage
 COPY --from=builder /app/dist ./dist
@@ -60,8 +46,6 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # Change ownership of the app directory
 RUN chown -R nodejs:nodejs /app
-
-# Switch to non-root user
 USER nodejs
 
 # Expose port

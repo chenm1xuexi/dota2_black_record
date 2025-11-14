@@ -105,7 +105,3 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
-
-
-
-.claude/
