@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # Application - Cloud Deployment
-  app:
+  dota2:
     image: crpi-i8di4kksl3oe9ugm.cn-hangzhou.personal.cr.aliyuncs.com/feifei-ai/feifei:feifei-dota2-v0.1
     container_name: feifei-dota2
     restart: unless-stopped
