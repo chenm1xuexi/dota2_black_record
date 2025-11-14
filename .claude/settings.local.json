@@ -11,13 +11,7 @@
       "Bash(docker build -t dota2-system:latest .)",
       "Bash(docker compose up -d)",
       "Bash(pnpm build)",
-      "Bash(pnpm start)",
-      "Bash(cat Dockerfile)",
-      "Bash(cat server/_core/vite.ts)",
-      "Bash(docker compose up --build -d)",
-      "Bash(cat docker-compose.yml)",
-      "Bash(curl -s http://localhost:3002/api/trpc/system.health)",
-      "Bash(curl -s http://localhost:3002/)"
+      "Bash(pnpm start)"
     ],
     "deny": [],
     "ask": []
