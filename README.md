@@ -128,6 +128,9 @@ NODE_ENV=development
 PORT=3000
 
 # 数据库配置
+# 注意：如果密码中包含特殊字符（如 @, #, %, & 等），需要对它们进行 URL 编码
+# 例如：密码 "pass@word" 应该写成 "pass%40word"
+# 常用编码：@ -> %40, # -> %23, % -> %25, & -> %26, + -> %2B, = -> %3D
 DATABASE_URL=mysql://username:password@localhost:3306/dota2
 
 # JWT 配置
