@@ -1,53 +1,75 @@
-# 如果你想进一步减小镜像体积和提高安全性
+# Multi-stage build for Dota 2 Battle Management System
+# Stage 1: Build frontend and backend
 # FROM node:20-alpine AS builder
-# 国内可使用
 FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS builder
-
-
-# 使用 .npmrc 文件配置（更优雅）
-RUN echo "registry=https://registry.npmmirror.com" > ~/.npmrc
+# 配置 npm 镜像为阿里云
+RUN npm config set registry https://registry.npmmirror.com
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# 配置 pnpm 使用阿里云镜像
+RUN pnpm config set registry https://registry.npmmirror.com
+
+# Set working directory
 WORKDIR /app
 
-# 分离依赖安装层，提高缓存效率
+# Copy package files and patches
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Copy source code (excluding node_modules)
 COPY . .
+
+# Build the application
+# This runs both frontend (Vite) and backend (esbuild) builds
 RUN pnpm build
 
-# Production stage
+# Stage 2: Production runtime
 # FROM node:20-alpine AS production
 FROM swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/node:20-alpine AS production
 
-RUN echo "registry=https://registry.npmmirror.com" > ~/.npmrc
+# 配置 npm 镜像为阿里云
+RUN npm config set registry https://registry.npmmirror.com
+
+# Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# 配置 pnpm 使用阿里云镜像
+RUN pnpm config set registry https://registry.npmmirror.com
+
+# Set working directory
 WORKDIR /app
 
+# Copy package files and patches first
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
-# 添加超时重试机制
-RUN pnpm install --frozen-lockfile --prod || \
-    (sleep 5 && pnpm install --frozen-lockfile --prod)
+# Install only production dependencies
+RUN pnpm install --frozen-lockfile --prod
 
+# Copy build artifacts from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 && \
-    chown -R nodejs:nodejs /app
+    adduser -S nodejs -u 1001
 
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
 USER nodejs
 
+# Expose port
 EXPOSE 3000
 
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "fetch('http://localhost:3000/api/trpc/system.health').then(r => r.ok ? process.exit(0) : process.exit(1)).catch(() => process.exit(1))"
 
+# Start the application
 CMD ["node", "dist/index.js"]
